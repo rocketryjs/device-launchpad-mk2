@@ -1,0 +1,35 @@
+{
+  "name": "@rocketry/device-launchpad-mk2",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Rocketry device module for the Novation Launchpad MK2",
+  "homepage": "https://github.com/rocketryjs/device-launchpad-mk2#readme",
+  "bugs": {
+    "url": "https://github.com/rocketryjs/device-launchpad-mk2/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rocketryjs/device-launchpad-mk2.git"
+  },
+  "license": "MIT",
+  "author": "Evelyn Hathaway <npm@evelynhathaway.com> (https://evelynhathaway.com)",
+  "main": "./lib/index.js",
+  "directories": {
+    "lib": "./lib",
+    "test": "./test"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc -w"
+  },
+  "dependencies": {
+    "@rocketry/core": "file:../rocketry"
+  },
+  "devDependencies": {
+    "@types/node": "^11.9.5",
+    "typescript": "^3.3.3333"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  }
+}
