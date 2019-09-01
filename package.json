@@ -12,7 +12,7 @@
     "url": "git+https://github.com/rocketryjs/device-launchpad-mk2.git"
   },
   "license": "MIT",
-  "author": "Evelyn Hathaway <npm@evelynhathaway.com> (https://evelynhathaway.com)",
+  "author": "Evelyn Hathaway <npm@evelyn.dev> (https://evelyn.dev)",
   "main": "./lib/index.js",
   "directories": {
     "lib": "./lib",
@@ -23,11 +23,13 @@
     "build:watch": "tsc -w"
   },
   "dependencies": {
-    "@rocketry/core": "file:../rocketry"
+    "@rocketry/core": "file:../rocketry",
+    "bind-deep": "^2.0.2",
+    "lodash": "^4.17.15"
   },
   "devDependencies": {
-    "@types/node": "^11.9.5",
-    "typescript": "^3.3.3333"
+    "@types/node": "^12.7.1",
+    "typescript": "^3.5.3"
   },
   "engines": {
     "node": ">=8.0.0"
