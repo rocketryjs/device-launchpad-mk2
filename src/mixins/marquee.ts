@@ -87,10 +87,10 @@ export default function (target) {
 		},
 	};
 	const manufacturerId = {
-		"matches": this.sysex.manufacturer,
+		"matches": target.sysex.manufacturer,
 	};
 	const modelId = {
-		"matches": this.sysex.model,
+		"matches": target.sysex.model,
 	};
 
 	// When marquee stops or loops
