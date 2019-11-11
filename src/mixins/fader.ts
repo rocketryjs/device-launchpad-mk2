@@ -2,12 +2,9 @@
 	Module: Launchpad fader mixin
 	Description: Methods for faders
 */
-/*
-	Module dependencies
-*/
-const _ = require("lodash");
-const bindDeep = require("bind-deep");
-const {properties, events} = require("../../mixin.js");
+
+import _ from "lodash";
+import bindDeep from "bind-deep";
 
 
 const fader = {};
@@ -51,28 +48,20 @@ const isControlChange = function(value) {
 };
 
 
-module.exports = function() {
-	// Properties
-	properties(
-		// Object to mix into
-		this,
-
-		// Instance
-		{
-			"fader": {
-				get() {
-					return Object.defineProperty(this, "fader", {
-						"value": bindDeep(this, fader)
-					}).fader;
-				}
-			}
-		}
-	);
-
+/*
+	Export mixin
+*/
+export default function (target) {
+	target.inits.add(function () {
+		Object.defineProperty(this, "fader", {
+			"value": bindDeep(this, fader),
+		});
+	});
 
 	// Events
-	events(this, {
-		"fader": {
+	target.events.set(
+		"fader",
+		{
 			"status": {
 				"min": 1,
 				"max": 1,
@@ -101,5 +90,5 @@ module.exports = function() {
 				}
 			},
 		}
-	});
+	);
 };

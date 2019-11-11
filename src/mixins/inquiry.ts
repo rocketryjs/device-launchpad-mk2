@@ -2,21 +2,19 @@
 	Module: Launchpad inquiry mixin
 	Description: Methods, properties, and events for device ID, device, version inquiry and setting to bootloader
 */
+
+import * as _ from "lodash";
+import rocketry from "@rocketry/core";
+
+
 /*
-	Module dependencies
+	Export mixin
 */
-const _ = require("lodash");
-const rocketry = require("../../index.js");
-const {methods, properties, events} = require("../../mixin.js");
-
-
-module.exports = function() {
-	// Methods
-	methods(
-		// Object to mix into
-		this,
-
-		// Instance
+export default function (target) {
+	// Instance
+	Object.defineProperties(
+		target.prototype,
+		// Methods
 		{
 			// Force the Launchpad into bootloader mode
 			setToBootloader() {
@@ -45,17 +43,8 @@ module.exports = function() {
 				// Promise returns the current bootloader and firmware versions and size of bootloader in KB
 				return this.promiseOnce("version");
 			},
-		}
-	);
-
-
-	// Properties
-	properties(
-		// Object to mix into
-		this,
-
-		// Instance
-		{
+			// Properties
+			// Instance
 			// Device id (1 - 16, set in bootloader, subtracting 1 for zero indexing)
 			"deviceId": {
 				get() {
@@ -77,18 +66,21 @@ module.exports = function() {
 						return 0;
 					}
 				}
-			}
+			},
 		},
+	);
 
-		// Static
+	// Static
+	Object.defineProperties(
+		target,
 		{
 			// Device name mutation and matching regex
 			"regex": {
 				get() {
 					return `^(?:\\d+-?\\s+)?(${this.type})(?:\\s+\\d+)?$`;
-				}
-			}
-		}
+				},
+			},
+		},
 	);
 
 
@@ -139,9 +131,10 @@ module.exports = function() {
 		}
 	};
 
-	events(this, {
-		// Response from device inquiry
-		"device": {
+	// Response from device inquiry
+	target.events.set(
+		"device",
+		{
 			"status": sysExStatus,
 			"sub id": {
 				"matches": [126],
@@ -170,8 +163,12 @@ module.exports = function() {
 			"firmware version": firmwareVersion,
 			"footer": sysExFooter
 		},
-		// Response from version inquiry
-		"version": {
+	);
+
+	// Response from version inquiry
+	target.events.set(
+		"version",
+		{
 			"status": sysExStatus,
 			"manufacturer id": manufacturerId,
 			"method response": {
@@ -182,5 +179,5 @@ module.exports = function() {
 			"bootloader size": bootloaderSize,
 			"footer": sysExFooter
 		}
-	});
+	);
 };

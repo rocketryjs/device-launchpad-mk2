@@ -2,11 +2,8 @@
 	Module: Launchpad MIDI clock mixin
 	Description: Methods for MIDI clock capable Launchpad devices
 */
-/*
-	Module dependencies
-*/
-const bindDeep = require("bind-deep");
-const {properties} = require("../../mixin.js");
+
+import bindDeep from "bind-deep";
 
 
 const clock = {};
@@ -66,21 +63,13 @@ clock.reset = function() {
 };
 
 
-module.exports = function() {
-	// Properties
-	properties(
-		// Object to mix into
-		this,
-
-		// Instance
-		{
-			"clock": {
-				get() {
-					return Object.defineProperty(this, "clock", {
-						"value": bindDeep(this, clock)
-					}).clock;
-				}
-			}
-		}
-	);
+/*
+	Export mixin
+*/
+export default function (target) {
+	target.inits.add(function () {
+		Object.defineProperty(this, "clock", {
+			"value": bindDeep(this, clock),
+		});
+	});
 };

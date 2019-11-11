@@ -2,12 +2,9 @@
 	Module: Launchpad marquee mixin
 	Description: Methods and event for marquee capable Launchpad devices
 */
-/*
-	Module dependencies
-*/
-const _ = require("lodash");
-const bindDeep = require("bind-deep");
-const {properties, events} = require("../../mixin.js");
+
+import {inRange} from "lodash";
+import bindDeep from "bind-deep";
 
 
 // Text Scrolling across the pad
@@ -45,7 +42,7 @@ marquee.normalize = function(text) {
 				// Recursive with each string
 				result.push(this.marquee.normalize(object));
 			} else if (typeof object === "number") {
-				if (!_.inRange(object, 1, 8)) {
+				if (!inRange(object, 1, 8)) {
 					throw new RangeError("Text speed isn't in the valid range.");
 				}
 				// Add plain speed byte, recursive with each string in object
@@ -65,24 +62,15 @@ marquee.normalize = function(text) {
 };
 
 
-module.exports = function() {
-	// Properties
-	properties(
-		// Object to mix into
-		this,
-
-		// Instance
-		{
-			"marquee": {
-				get() {
-					return Object.defineProperty(this, "marquee", {
-						"value": bindDeep(this, marquee)
-					}).marquee;
-				}
-			}
-		}
-	);
-
+/*
+	Export mixin
+*/
+export default function (target) {
+	target.inits.add(function () {
+		Object.defineProperty(this, "marquee", {
+			"value": bindDeep(this, marquee),
+		});
+	});
 
 	// Events
 	// Shared bytes
@@ -90,31 +78,32 @@ module.exports = function() {
 		"matches": [240],
 		mutate(message) {
 			message.status = message.status[0];
-		}
+		},
 	};
 	const sysExFooter = {
 		"matches": [247],
 		mutate(message) {
 			message.footer = message.footer[0];
-		}
+		},
 	};
 	const manufacturerId = {
-		"matches": this.sysex.manufacturer
+		"matches": this.sysex.manufacturer,
 	};
 	const modelId = {
-		"matches": this.sysex.model
+		"matches": this.sysex.model,
 	};
-	
-	events(this, {
-		// When marquee stops or loops
-		"marquee": {
+
+	// When marquee stops or loops
+	target.events.set(
+		"marquee",
+		{
 			"status": sysExStatus,
 			"manufacturer id": manufacturerId,
 			"model id": modelId,
 			"method response": {
-				"matches": [21]
+				"matches": [21],
 			},
-			"footer": sysExFooter
-		}
-	});
+			"footer": sysExFooter,
+		},
+	);
 };

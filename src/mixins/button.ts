@@ -2,19 +2,20 @@
 	Module: Launchpad buttons mixin
 	Description: Methods, properties, and events for Launchpad buttons
 */
-/*
-	Module dependencies
-*/
-const _ = require("lodash");
-const Button = require("../button.js");
-const ButtonArray = require("../button-array.js");
-const mixin = require("../../mixin.js");
-const {methods, properties, events} = mixin;
+
+
+import _ from "lodash";
+import color from "./mixins/button/rgb-color";
+// const Button = require("../button");
+// const ButtonArray = require("../button-array");
+// const mixin = require("../../mixin");
+// const {methods, properties, events} = mixin;
 
 
 module.exports = function(mixins) {
 	// Button class definition
-	class ButtonExtended extends Button {
+	@color
+	class LaunchpadMk2Button extends Button {
 		constructor() {
 			super(...arguments);
 		}
@@ -22,11 +23,6 @@ module.exports = function(mixins) {
 			return object instanceof this;
 		}
 	}
-	// Mixins for buttons
-	for (const toMix of mixins) {
-		mixin(ButtonExtended, `./launchpad/mixins/button/${toMix}.js`);
-	}
-
 
 	// Methods
 	methods(

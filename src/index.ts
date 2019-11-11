@@ -12,7 +12,6 @@ import inquiry from "./mixins/inquiry";
 import query from "./mixins/query";
 import fader from "./mixins/fader";
 import button from "./mixins/button";
-import {light, dark, flash, pulse} from "./mixins/button/rgb-color";
 
 
 /*
@@ -42,7 +41,7 @@ const buttonValues = (() => {
 				"column": x,
 				"row": y,
 				quadrant,
-				"note": new Proxy({}, {
+				"note": new Proxy({}, { // TODO: make not a proxy
 					get(target, property) {
 						if (property === "1") {
 							// Note for layouts[1]
@@ -63,7 +62,7 @@ const buttonValues = (() => {
 			"status": "note on",
 			"column": 8,
 			"row": y,
-			"note": new Proxy({}, {
+			"note": new Proxy({}, { // TODO: make not a proxy
 				get(target, property) {
 					if (property === "1") {
 						// Note for layouts[1]
@@ -86,7 +85,7 @@ const buttonValues = (() => {
 			"status": "control change",
 			"column": x,
 			"row": 8,
-			"note": new Proxy({}, {
+			"note": new Proxy({}, { // TODO: make not a proxy
 				get() {
 					// Default
 					return 104 + x;
@@ -116,7 +115,7 @@ const sysexInformation = (() => {
 /*
 	Launchpad MK2 Class
 */
-@color @marquee @clock @layout @inquiry @query @fader @button @light @dark @flash @pulse
+@color @marquee @clock @layout @inquiry @query @fader @button
 export default class LaunchpadMk2 extends Device {
 	constructor() {
 		// Device, EventEmitter
@@ -167,9 +166,10 @@ export default class LaunchpadMk2 extends Device {
 	static values = buttonValues;
 	// SysEx information
 	static sysex = sysexInformation;
-	// Device type name, key for `rocketry.devices`, etc
+	// Device type name, key for `rocketry.devices`, etc.
 	static type = "Launchpad MK2";
 }
+
 
 /*
 	Register with Rocketry core

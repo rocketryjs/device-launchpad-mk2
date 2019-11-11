@@ -3,15 +3,12 @@
 	Description: Methods for querying for Launchpad buttons
 */
 /*
-	Module dependencies
-*/
-const {methods, properties} = require("../../mixin.js");
-/*
 	Hoisted module dependencies
 	ButtonArray - required post export because of cross-requiring
 */
 let ButtonArray;
 
+// TODO: HIGH PRIORITY: move the code to `core`, leave the launchpad-specific items here as options for the main function
 
 /*
 	Values used for selection
@@ -177,10 +174,11 @@ const handler = {
 		}
 	}
 };
-// Make query using handler and thisArg
-const makeQuery = function(thisArg) {
-	// `handler.apply` requires a function target, but object
-	const target = function() {};
+
+// Make query using `handler` and `thisArg`
+const makeQuery = function (thisArg) {
+	// `handler.apply` requires a function target, so we'll use it as an object for storing `this` and a target for our function call traps
+	const target = function () {};
 	// Assign this for passing through proxies' targets
 	target.this = thisArg;
 
@@ -192,45 +190,26 @@ const makeQuery = function(thisArg) {
 /*
 	Export mixin
 */
-module.exports = function() {
-	// Methods
-	methods(
-		// Object to mix into
-		this,
-
-		// Instance
-		{
-			// Generator for matches
-			* get(value) {
+export default function (target) {
+	// Generator for matches
+	target.inits.add(function () {
+		Object.defineProperty(
+			this,
+			"get",
+			function* (value) {
 				for (const button of this.buttons) {
 					if (button.test(value)) {
 						yield button;
 					}
 				}
-			}
-		}
-	);
+			},
+		);
+	});
 
-
-	// Properties
-	properties(
-		// Object to mix into
-		this,
-
-		// Instance
-		{
-			// Query selectors from module - smart getter
-			"query": {
-				get() {
-					return Object.defineProperty(this, "query", {
-						"value": makeQuery(this)
-					}).query;
-				},
-			}
-		}
-	);
+	// Query selectors from module
+	target.prototype.query = makeQuery(target);
 };
 
 
 // ButtonArray - hoisted previously in file
-ButtonArray = require("../button-array.js");
+ButtonArray = require("@rocketry/core/lib/button-array.js"); // TODO export button array

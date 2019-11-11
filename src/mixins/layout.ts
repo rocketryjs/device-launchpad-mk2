@@ -2,12 +2,9 @@
 	Module: Launchpad layout mixin
 	Description: Methods for layouts
 */
-/*
-	Module dependencies
-*/
-const _ = require("lodash");
-const bindDeep = require("bind-deep");
-const {properties} = require("../../mixin.js");
+
+import * as _ from "lodash";
+import bindDeep from "bind-deep";
 
 
 const layout = {};
@@ -46,21 +43,13 @@ layout.normalize = function(layout) {
 };
 
 
-module.exports = function() {
-	// Properties
-	properties(
-		// Object to mix into
-		this,
-
-		// Instance
-		{
-			"layout": {
-				get() {
-					return Object.defineProperty(this, "layout", {
-						"value": bindDeep(this, layout)
-					}).layout;
-				},
-			}
-		}
-	);
+/*
+	Export mixin
+*/
+export default function (target) {
+	target.inits.add(function () {
+		Object.defineProperty(this, "layout", {
+			"value": bindDeep(this, layout),
+		});
+	});
 };

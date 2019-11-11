@@ -3,6 +3,8 @@
 	Description: Methods for RGB color capable Launchpad devices' buttons
 */
 
+import bindDeep from "bind-deep";
+
 
 // Helper function for sending standard colors
 const sendStandard = function(color, channel) {
@@ -103,40 +105,29 @@ pulse.stop = function() {
 pulse.reset = pulse.stop;
 
 
-module.exports = function() {
-	// Properties
-	properties(
-		// Object to mix into
-		this,
-
-		// Instance
-		{
-			"light": {
-				get() {
-					return Object.defineProperty(this, "light", {
-						"value": bindDeep(this, light)
-					}).light;
-				}
+/*
+	Export mixin
+*/
+export default function (target) {
+	target.inits.add(function () {
+		Object.defineProperties(
+			this,
+			{
+				"light": {
+					"value": bindDeep(this, light),
+				},
+				"dark": {
+					get() {
+						return this.light.stop;
+					},
+				},
+				"flash": {
+					"value": bindDeep(this, flash),
+				},
+				"pulse": {
+					"value": bindDeep(this, pulse),
+				},
 			},
-			"dark": {
-				get() {
-					return this.light.stop;
-				}
-			},
-			"flash": {
-				get() {
-					return Object.defineProperty(this, "flash", {
-						"value": bindDeep(this, flash)
-					}).flash;
-				}
-			},
-			"pulse": {
-				get() {
-					return Object.defineProperty(this, "pulse", {
-						"value": bindDeep(this, pulse)
-					}).pulse;
-				}
-			}
-		}
-	);
+		);
+	});
 };

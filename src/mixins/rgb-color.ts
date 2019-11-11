@@ -2,10 +2,10 @@
 	Module: Launchpad RGB color mixin
 	Description: Methods and properties for RGB color capable Launchpad devices
 */
-import {betweenInclusive} from "@rocketry/util"; // TODO correct location
+import {betweenInclusive} from "@rocketry/core/lib/util"; // TODO export util
 
 
-export default function(target) {
+export default function (target) {
 	/*
 		Static
 	*/
