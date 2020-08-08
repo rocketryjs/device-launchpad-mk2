@@ -69,7 +69,7 @@ clock.reset = function() {
 export default function (target) {
 	target.inits.add(function () {
 		Object.defineProperty(this, "clock", {
-			"value": bindDeep(this, clock),
+			"value": bindDeep(clock, this),
 		});
 	});
 };

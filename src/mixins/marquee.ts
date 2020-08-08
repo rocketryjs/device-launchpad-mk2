@@ -68,7 +68,7 @@ marquee.normalize = function(text) {
 export default function (target) {
 	target.inits.add(function () {
 		Object.defineProperty(this, "marquee", {
-			"value": bindDeep(this, marquee),
+			"value": bindDeep(marquee, this),
 		});
 	});
 

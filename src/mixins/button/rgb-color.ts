@@ -88,7 +88,7 @@ const pulse = function(color) {
 	// Save
 	this.pulse.current = color;
 	// Send
-	if (color.type === "rgb") {
+	if (Array.isArray(color)) {
 		// RGB
 		throw new TypeError("Pulsing can't be used with an RGB color via MIDI.");
 	} else if (color.type === "standard") {
@@ -114,7 +114,7 @@ export default function (target) {
 			this,
 			{
 				"light": {
-					"value": bindDeep(this, light),
+					"value": bindDeep(light, this),
 				},
 				"dark": {
 					get() {
@@ -122,10 +122,10 @@ export default function (target) {
 					},
 				},
 				"flash": {
-					"value": bindDeep(this, flash),
+					"value": bindDeep(flash, this),
 				},
 				"pulse": {
-					"value": bindDeep(this, pulse),
+					"value": bindDeep(pulse, this),
 				},
 			},
 		);

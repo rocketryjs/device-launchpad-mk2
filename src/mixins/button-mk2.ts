@@ -5,7 +5,7 @@
 
 import _ from "lodash";
 import color from "./button/rgb-color";
-import Button from "@rocketry/core/lib/button"; // TODO export button
+import Button from "@rocketry/core";
 import button from "./button"; // TODO move to common
 
 
@@ -23,7 +23,7 @@ class LaunchpadMk2Button extends Button {
 */
 export default function (target) {
 	// Extend Launchpad common button mixin
-	button(target);
+	button(target).call(this);
 
 	target.inits.add(function () {
 		/*

@@ -212,4 +212,4 @@ export default function (target) {
 
 
 // ButtonArray - hoisted previously in file
-ButtonArray = require("@rocketry/core/lib/button-array.js"); // TODO export button array
+ButtonArray = require("@rocketry/core"); // TODO export button array

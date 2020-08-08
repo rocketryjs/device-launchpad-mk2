@@ -49,7 +49,7 @@ layout.normalize = function(layout) {
 export default function (target) {
 	target.inits.add(function () {
 		Object.defineProperty(this, "layout", {
-			"value": bindDeep(this, layout),
+			"value": bindDeep(layout, this),
 		});
 	});
 };

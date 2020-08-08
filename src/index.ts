@@ -2,9 +2,9 @@
 	Module: Launchpad MK2
 	Description: Class for the Launchpad MK2 device
 */
-import {registerDevice, Device} from "@rocketry/core";
+import rocketry, {Device, PortNumbers} from "@rocketry/core";
 // Mixins
-import color from "./mixins/rgb-color";
+import color, {Color} from "./mixins/rgb-color";
 import marquee from "./mixins/marquee";
 import clock from "./mixins/clock";
 import layout from "./mixins/layout";
@@ -32,11 +32,15 @@ const sysexInformation = (() => {
 /*
 	Launchpad MK2 Class
 */
+export default interface LaunchpadMk2 {
+	constructor: typeof LaunchpadMk2;
+}
 @color @marquee @clock @layout @inquiry @query @fader @button
 export default class LaunchpadMk2 extends Device {
-	constructor() {
-		// Device, EventEmitter
-		super(...arguments);
+	static color: Color;
+
+	constructor (ports?: PortNumbers) {
+		super(ports);
 	}
 
 	// Full reset
@@ -47,8 +51,6 @@ export default class LaunchpadMk2 extends Device {
 		this.layout.reset();
 		this.marquee.reset();
 		this.light.reset();
-
-		// Method chaining
 		return this;
 	}
 
@@ -81,12 +83,11 @@ export default class LaunchpadMk2 extends Device {
 	]
 	// SysEx information
 	static sysex = sysexInformation;
-	// Device type name, key for `rocketry.devices`, etc.
-	static type = "Launchpad MK2";
+	static regex = /^(?:\d+-?\s+)?(Launchpad MK2)(?:\s+\d+)?$/i
 }
 
 
 /*
 	Register with Rocketry core
 */
-registerDevice(LaunchpadMk2);
+rocketry.registerDevice(LaunchpadMk2);

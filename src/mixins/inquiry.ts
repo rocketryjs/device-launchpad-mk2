@@ -70,21 +70,6 @@ export default function (target) {
 		},
 	);
 
-
-	// Static
-	Object.defineProperties(
-		target,
-		{
-			// Device name mutation and matching regex
-			"regex": {
-				get() {
-					return `^(?:\\d+-?\\s+)?(${this.type})(?:\\s+\\d+)?$`;
-				},
-			},
-		},
-	);
-
-
 	// Events
 	// Shared functions
 	const makeVersion = function(value) {

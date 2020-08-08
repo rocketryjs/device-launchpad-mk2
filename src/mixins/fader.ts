@@ -54,7 +54,7 @@ const isControlChange = function(value) {
 export default function (target) {
 	target.inits.add(function () {
 		Object.defineProperty(this, "fader", {
-			"value": bindDeep(this, fader),
+			"value": bindDeep(fader, this),
 		});
 	});
 
