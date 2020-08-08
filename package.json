@@ -25,7 +25,7 @@
   "dependencies": {
     "@rocketry/core": "file:../rocketry",
     "bind-deep": "^2.0.2",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "loose-rgb": "^1.0.2"
   },
   "devDependencies": {
