@@ -3,7 +3,7 @@
 	Description: Methods for MIDI clock capable Launchpad devices
 */
 
-import {Device} from "@rocketry/core";
+import type {Device} from "@rocketry/core";
 
 const clear: Clock<DependentDevice>["clear"] = function () {
 	// Stop the interval

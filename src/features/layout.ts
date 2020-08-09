@@ -1,5 +1,5 @@
 import {inRange} from "lodash";
-import {Device, Send} from "@rocketry/core";
+import type {Device, Send} from "@rocketry/core";
 
 // Change layouts
 const change: Layout<DependentDevice>["change"] = function(layout: LayoutType) {

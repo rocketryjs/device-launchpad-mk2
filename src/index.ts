@@ -86,7 +86,7 @@ export default class LaunchpadMk2 extends Device {
 	]
 	// SysEx information
 	static sysex = sysexInformation();
-	static regex = /^(?:\d+-?\s+)?(Launchpad MK2)(?:\s+\d+)?$/i
+	static regex = /^(Launchpad MK2)(?:\s+\d+)?$/i
 }
 
 registerButtonEvents();

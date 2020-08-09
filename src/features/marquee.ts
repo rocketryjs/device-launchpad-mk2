@@ -1,8 +1,7 @@
 import {inRange} from "lodash";
 import LaunchpadMk2 from "..";
-import {RGB} from "loose-rgb/lib/helpers";
-import {Message, Device, Send, DeviceAPIClass} from "@rocketry/core";
-import {StandardColorType, Color} from "./color";
+import type {Message, Device, Send, DeviceAPIClass} from "@rocketry/core";
+import type {StandardColorType, Color} from "./color";
 
 
 // Text Scrolling across the pad

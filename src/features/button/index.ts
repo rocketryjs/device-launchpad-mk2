@@ -1,5 +1,5 @@
 import {light, dark, flash, pulse} from "./light";
-import {Button} from "@rocketry/core/src/button";
+import {Button, Device} from "@rocketry/core";
 import LaunchpadMk2 from "../..";
 import bindDeep from "bind-deep";
 
