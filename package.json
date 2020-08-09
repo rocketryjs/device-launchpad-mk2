@@ -24,14 +24,14 @@
   },
   "dependencies": {
     "@rocketry/core": "file:../rocketry",
-    "bind-deep": "^2.0.2",
+    "bind-deep": "^2.1.0",
     "lodash": "^4.17.19",
     "loose-rgb": "^1.0.2"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.138",
-    "@types/node": "^12.7.1",
-    "typescript": "^3.5.3"
+    "@types/lodash": "^4.14.159",
+    "@types/node": "^14.0.27",
+    "typescript": "^3.9.7"
   },
   "engines": {
     "node": ">=8.0.0"

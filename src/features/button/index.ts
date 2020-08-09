@@ -3,7 +3,6 @@ import {Button} from "@rocketry/core/src/button";
 import LaunchpadMk2 from "../..";
 import bindDeep from "bind-deep";
 
-
 // LaunchpadMk2Button class definition
 export class LaunchpadMk2Button extends Button {
 	constructor (device: LaunchpadMk2, assignProps?: unknown, defineProps?: PropertyDescriptorMap) {
@@ -20,12 +19,11 @@ export class LaunchpadMk2Button extends Button {
 	pulse = bindDeep(pulse, this);
 }
 
-
 /*
 	Generation of button with values
 */
 export const createButtons = function (device: LaunchpadMk2) {
-	const buttons = [];
+	const buttons: Array<LaunchpadMk2Button> = [];
 	const range = [...Array(8).keys()];
 
 	// Grid and Right
@@ -117,3 +115,6 @@ export const createButtons = function (device: LaunchpadMk2) {
 
 	return buttons;
 };
+
+export * from "./events";
+export * from "./light";

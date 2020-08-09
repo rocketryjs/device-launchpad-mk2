@@ -6,8 +6,10 @@ import rocketry, {Device, PortNumbers} from "@rocketry/core";
 import bindDeep from "bind-deep";
 import {color} from "./features/color";
 import {clock, Clock} from "./features/clock";
-import {createButtons} from "./features/button";
+import {createButtons, registerButtonEvents} from "./features/button";
 import {layout} from "./features/layout";
+import {makeQuery, get} from "./features/query";
+import {marquee, registerMarqueeEvents} from "./features/marquee";
 
 
 /*
@@ -36,6 +38,9 @@ export default class LaunchpadMk2 extends Device {
 	clock = bindDeep(clock as Clock<LaunchpadMk2>, this);
 	buttons = createButtons(this);
 	layout = bindDeep(layout, this);
+	query = makeQuery(this);
+	get = get.bind(this);
+	marquee = bindDeep(marquee, this)
 
 	constructor (ports?: PortNumbers) {
 		super(ports);
@@ -47,7 +52,7 @@ export default class LaunchpadMk2 extends Device {
 	reset() {
 		this.clock.reset();
 		this.layout.reset();
-		// this.marquee.reset();
+		this.marquee.reset();
 		// this.light.reset();
 		return this;
 	}
@@ -83,6 +88,9 @@ export default class LaunchpadMk2 extends Device {
 	static sysex = sysexInformation();
 	static regex = /^(?:\d+-?\s+)?(Launchpad MK2)(?:\s+\d+)?$/i
 }
+
+registerButtonEvents();
+registerMarqueeEvents();
 
 
 /*

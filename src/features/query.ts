@@ -176,7 +176,7 @@ const handler = {
 };
 
 // Make query using `handler` and `thisArg`
-const makeQuery = function (thisArg) {
+export const makeQuery = function (thisArg) {
 	// `handler.apply` requires a function target, so we'll use it as an object for storing `this` and a target for our function call traps
 	const target = function () {};
 	// Assign this for passing through proxies' targets
@@ -186,30 +186,13 @@ const makeQuery = function (thisArg) {
 	return new Proxy(target, handler);
 };
 
-
-/*
-	Export mixin
-*/
-export default function (target) {
-	// Generator for matches
-	target.inits.add(function () {
-		Object.defineProperty(
-			this,
-			"get",
-			function* (value) {
-				for (const button of this.buttons) {
-					if (button.test(value)) {
-						yield button;
-					}
-				}
-			},
-		);
-	});
-
-	// Query selectors from module
-	target.prototype.query = makeQuery(target);
-};
-
+export const get = function* (value) {
+	for (const button of this.buttons) {
+		if (button.test(value)) {
+			yield button;
+		}
+	}
+}
 
 // ButtonArray - hoisted previously in file
 ButtonArray = require("@rocketry/core"); // TODO export button array

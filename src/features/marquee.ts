@@ -1,15 +1,13 @@
-/*
-	Module: Launchpad marquee mixin
-	Description: Methods and event for marquee capable Launchpad devices
-*/
-
 import {inRange} from "lodash";
-import bindDeep from "bind-deep";
+import LaunchpadMk2 from "..";
+import {RGB} from "loose-rgb/lib/helpers";
+import {Message, Device, Send, DeviceAPIClass} from "@rocketry/core";
+import {StandardColorType, Color} from "./color";
 
 
 // Text Scrolling across the pad
-const marquee = function(text, color = "white", loop = 0) {
-	color = this.constructor.color.normalize(color);
+export const marquee: Marquee<DependentDevice> = function (text, color = "white", loop = 0) {
+	const normalizedColor = this.constructor.color.normalize(color);
 	if (text) {
 		text = this.marquee.normalize(text);
 	} else {
@@ -17,13 +15,12 @@ const marquee = function(text, color = "white", loop = 0) {
 	}
 	loop = +loop; // true, 1 => 1; false, 0, "" => 0
 
-	if (Array.isArray(color)) {
+	if (Array.isArray(normalizedColor)) {
 		// RGB
 		throw new TypeError("Marquee can't be used with an RGB color via MIDI.");
-	} else if (typeof color === "number") {
-		// Basic
-		this.send.sysex([this.constructor.sysex.prefix, 20, color, loop, text]);
 	}
+	// Basic
+	this.send.sysex([...this.constructor.sysex.prefix, 20, normalizedColor, loop, ...text]);
 
 	// Return promise to detect loop or stop (stopMarquee or finished)
 	// This will only resolve once but looping may cause the event to fire after a single "marquee" event
@@ -34,7 +31,8 @@ const marquee = function(text, color = "white", loop = 0) {
 marquee.stop = function() {
 	return this.marquee();
 };
-marquee.normalize = function(text) {
+marquee.reset = marquee.stop;
+marquee.normalize = function(text: string | Message): Message {
 	let result = [];
 	if (Array.isArray(text)) {
 		for (const object of text) {
@@ -62,48 +60,55 @@ marquee.normalize = function(text) {
 };
 
 
-/*
-	Export mixin
-*/
-export default function (target) {
-	target.inits.add(function () {
-		Object.defineProperty(this, "marquee", {
-			"value": bindDeep(marquee, this),
-		});
-	});
+interface DependentDevice extends Device {
+	marquee: Marquee<void>;
+	send: Send<DependentDevice, void>;
+	constructor: typeof Device & DeviceAPIClass & {
+		color: Color;
+	};
+}
 
+export interface Marquee<T extends DependentDevice | void> {
+	(this: T, text?: string | Message, color?: string | StandardColorType, loop?: boolean | number): Promise<any>;
+	stop (this: T): Promise<any>;
+	reset (this: T): Promise<any>;
+	normalize (this: T, text: string | Message): Message;
+}
+
+
+export const registerMarqueeEvents = function () {
 	// Events
 	// Shared bytes
 	const sysExStatus = {
-		"matches": [240],
-		mutate(message) {
+		matches: [240],
+		mutate(message: any) {
 			message.status = message.status[0];
 		},
 	};
 	const sysExFooter = {
-		"matches": [247],
-		mutate(message) {
+		matches: [247],
+		mutate(message: any) {
 			message.footer = message.footer[0];
 		},
 	};
 	const manufacturerId = {
-		"matches": target.sysex.manufacturer,
+		matches: LaunchpadMk2.sysex.manufacturer,
 	};
 	const modelId = {
-		"matches": target.sysex.model,
+		matches: LaunchpadMk2.sysex.model,
 	};
 
 	// When marquee stops or loops
-	target.events.set(
+	LaunchpadMk2.registerEvent(
 		"marquee",
 		{
-			"status": sysExStatus,
-			"manufacturer id": manufacturerId,
-			"model id": modelId,
-			"method response": {
-				"matches": [21],
+			status: sysExStatus,
+			manufacturerId: manufacturerId,
+			modelId: modelId,
+			methodResponse: {
+				matches: [21],
 			},
-			"footer": sysExFooter,
+			footer: sysExFooter,
 		},
 	);
 };
