@@ -1,22 +1,21 @@
 /*
-	Module: Launchpad MIDI clock mixin
+	Module: Launchpad MIDI clock
 	Description: Methods for MIDI clock capable Launchpad devices
 */
 
-import bindDeep from "bind-deep";
+import {Device} from "@rocketry/core";
 
-
-const clock = {};
-clock.clear = function() {
+const clear: Clock<DependentDevice>["clear"] = function () {
 	// Stop the interval
 	clearInterval(this.clock.interval);
 	delete this.clock.interval;
+	return this;
 };
-clock.change = function(
+const change: Clock<DependentDevice>["change"] = function(
 	// Beats per minute
-	bpm,
+	bpm: number,
 	// Will stop after 48 messages (2 beats) by default
-	maxReps = 48
+	maxReps: number = 48
 ) {
 	// Save
 	this.clock.current = bpm;
@@ -26,11 +25,11 @@ clock.change = function(
 
 	// Stop sending MIDI clock messages when closing the device
 	// `device.reset()` should be run before `device.close()` as this only prevents extra messages
-	if (!this.closeListener) {
-		this.closeListener = () => {
+	if (!this.clock.closeListener) {
+		this.clock.closeListener = () => {
 			this.clock.clear();
 		};
-		this.on("close", this.closeListener);
+		this.on("close", this.clock.closeListener);
 	}
 
 	let reps = 0;
@@ -51,25 +50,34 @@ clock.change = function(
 		1000 / (bpm * 24 / 60)
 	);
 
-	// Method chaining
 	return this;
 };
-clock.set = clock.change;
-clock.reset = function() {
+const set: Clock<DependentDevice>["set"] = change;
+const reset: Clock<DependentDevice>["reset"] = function () {
 	// Reset to 120bpm if the bpm is set to something other than 120
 	if (typeof this.clock.current !== "undefined" && this.clock.current !== 120) {
 		return this.clock.change(120);
 	}
 };
 
-
-/*
-	Export mixin
-*/
-export default function (target) {
-	target.inits.add(function () {
-		Object.defineProperty(this, "clock", {
-			"value": bindDeep(clock, this),
-		});
-	});
+export const clock: Clock<DependentDevice> = {
+	clear,
+	change,
+	set,
+	reset,
+	current: undefined,
 };
+
+interface DependentDevice extends Device {
+	clock: Clock<DependentDevice, void>;
+}
+
+export interface Clock<R extends DependentDevice, T extends DependentDevice | void = R> {
+	clear (this: T): R;
+	change (this: T, bpm: number, maxReps?: number): R;
+	set (this: T, bpm: number, maxReps?: number): R;
+	reset (this: T): R;
+	current?: number;
+	closeListener?(): void;
+	interval?: NodeJS.Timeout;
+}

@@ -1,10 +1,7 @@
-/*
-	Module: Launchpad RGB color mixin
-	Description: Methods and properties for RGB color capable Launchpad devices
-*/
 import {betweenInclusive} from "@rocketry/core";
 import {normalize, convert} from "loose-rgb"
 import {RGB, RGBArray} from "loose-rgb/lib/helpers";
+
 
 // RGB color names
 export const names = {
@@ -75,11 +72,4 @@ export interface Color {
 	names: typeof names;
 	ranges: typeof ranges;
 	normalize (this: Color, color: string | StandardColorType | RGB): StandardColorType | RGBArray;
-};
-
-export default function (target) {
-	/*
-		Static
-	*/
-	target.color = color;
 };

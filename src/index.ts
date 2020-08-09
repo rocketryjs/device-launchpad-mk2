@@ -3,21 +3,17 @@
 	Description: Class for the Launchpad MK2 device
 */
 import rocketry, {Device, PortNumbers} from "@rocketry/core";
-// Mixins
-import color, {Color} from "./mixins/rgb-color";
-import marquee from "./mixins/marquee";
-import clock from "./mixins/clock";
-import layout from "./mixins/layout";
-import inquiry from "./mixins/inquiry";
-import query from "./mixins/query";
-import fader from "./mixins/fader";
-import button from "./mixins/button";
+import bindDeep from "bind-deep";
+import {color} from "./features/color";
+import {clock, Clock} from "./features/clock";
+import {createButtons} from "./features/button";
+import {layout} from "./features/layout";
 
 
 /*
 	SysEx information
 */
-const sysexInformation = (() => {
+const sysexInformation = () => {
 	// SysEx Manufacturer ID for Focusrite/Novation
 	// https://www.midi.org/specifications/item/manufacturer-id-numbers
 	const manufacturer = [0, 32, 41];
@@ -26,7 +22,7 @@ const sysexInformation = (() => {
 	const prefix = [...manufacturer, ...model];
 
 	return {manufacturer, model, prefix};
-});
+};
 
 
 /*
@@ -35,9 +31,11 @@ const sysexInformation = (() => {
 export default interface LaunchpadMk2 {
 	constructor: typeof LaunchpadMk2;
 }
-@color @marquee @clock @layout @inquiry @query @fader @button
 export default class LaunchpadMk2 extends Device {
-	static color: Color;
+	static color = color;
+	clock = bindDeep(clock as Clock<LaunchpadMk2>, this);
+	buttons = createButtons(this);
+	layout = bindDeep(layout, this);
 
 	constructor (ports?: PortNumbers) {
 		super(ports);
@@ -49,8 +47,8 @@ export default class LaunchpadMk2 extends Device {
 	reset() {
 		this.clock.reset();
 		this.layout.reset();
-		this.marquee.reset();
-		this.light.reset();
+		// this.marquee.reset();
+		// this.light.reset();
 		return this;
 	}
 
@@ -82,7 +80,7 @@ export default class LaunchpadMk2 extends Device {
 		},
 	]
 	// SysEx information
-	static sysex = sysexInformation;
+	static sysex = sysexInformation();
 	static regex = /^(?:\d+-?\s+)?(Launchpad MK2)(?:\s+\d+)?$/i
 }
 
