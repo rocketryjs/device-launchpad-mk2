@@ -1,10 +1,10 @@
 import {light, dark, flash, pulse} from "./light";
-import {Button, Device} from "@rocketry/core";
+import {Button} from "@rocketry/core";
 import LaunchpadMk2 from "../..";
 import bindDeep from "bind-deep";
 
 // LaunchpadMk2Button class definition
-export class LaunchpadMk2Button extends Button {
+export class LaunchpadMk2Button extends Button<LaunchpadMk2, LaunchpadMk2Button> {
 	constructor (device: LaunchpadMk2, assignProps?: unknown, defineProps?: PropertyDescriptorMap) {
 		super(device);
 
@@ -52,8 +52,8 @@ export const createButtons = function (device: LaunchpadMk2) {
 					},
 					{
 						"note": {
-							get() {
-								if (this.device.layout.current === "1") {
+							get(this: LaunchpadMk2Button) {
+								if (this.device.layout.current === 1) {
 									// Note for layouts[1]
 									return 36 + (4 * y) + x + (x <= 3 ? 0 : 28);
 								} else {
@@ -80,8 +80,8 @@ export const createButtons = function (device: LaunchpadMk2) {
 				},
 				{
 					"note": {
-						get() {
-							if (this.device.layout.current === "1") {
+						get(this: LaunchpadMk2Button) {
+							if (this.device.layout.current === 1) {
 								// Note for layouts[1]
 								return 100 + y;
 							} else {

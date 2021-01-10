@@ -1,8 +1,9 @@
 import type {RGB} from "loose-rgb/lib/helpers";
 import type {StandardColorType} from "../color";
+import {LaunchpadMk2Button} from ".";
 
 // Helper function for sending standard colors
-export const sendStandard = function(color: number, channel?: number) {
+export const sendStandard = function(this: LaunchpadMk2Button, color: number, channel?: number) {
 	const layout = this.device.layout.current || 0;
 	if (!channel) {
 		// Channel to use from layout

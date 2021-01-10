@@ -4,7 +4,7 @@ import {RGB, RGBArray} from "loose-rgb/lib/helpers";
 
 
 // RGB color names
-export const names = {
+export const names: Record<string, string | number> = {
 	"dark red": 7,
 	"red": 5,
 	"pink": 95,

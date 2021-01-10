@@ -4,11 +4,14 @@
 */
 
 import type {Device} from "@rocketry/core";
+import bindDeep from "bind-deep";
 
 const clear: Clock<DependentDevice>["clear"] = function () {
 	// Stop the interval
-	clearInterval(this.clock.interval);
-	delete this.clock.interval;
+	if (this.clock.interval) {
+		clearInterval(this.clock.interval);
+		delete this.clock.interval;
+	}
 	return this;
 };
 const change: Clock<DependentDevice>["change"] = function(
@@ -25,11 +28,9 @@ const change: Clock<DependentDevice>["change"] = function(
 
 	// Stop sending MIDI clock messages when closing the device
 	// `device.reset()` should be run before `device.close()` as this only prevents extra messages
-	if (!this.clock.closeListener) {
-		this.clock.closeListener = () => {
-			this.clock.clear();
-		};
-		this.on("close", this.clock.closeListener);
+	if (!this.clock.hasCloseListener) {
+		this.clock.hasCloseListener = true;
+		this.on("close", this.clock.clear);
 	}
 
 	let reps = 0;
@@ -58,6 +59,7 @@ const reset: Clock<DependentDevice>["reset"] = function () {
 	if (typeof this.clock.current !== "undefined" && this.clock.current !== 120) {
 		return this.clock.change(120);
 	}
+	return this;
 };
 
 export const clock: Clock<DependentDevice> = {
@@ -66,18 +68,23 @@ export const clock: Clock<DependentDevice> = {
 	set,
 	reset,
 	current: undefined,
+	hasCloseListener: false,
 };
 
-interface DependentDevice extends Device {
-	clock: Clock<DependentDevice, void>;
+declare abstract class DependentDevice extends Device<DependentDevice> {
+	clock: Clock<void, DependentDevice>;
 }
 
-export interface Clock<R extends DependentDevice, T extends DependentDevice | void = R> {
+export interface Clock<T extends DependentDevice | void, R extends DependentDevice | void = T> {
 	clear (this: T): R;
 	change (this: T, bpm: number, maxReps?: number): R;
 	set (this: T, bpm: number, maxReps?: number): R;
 	reset (this: T): R;
 	current?: number;
-	closeListener?(): void;
+	hasCloseListener: boolean;
 	interval?: NodeJS.Timeout;
 }
+
+export const makeClock = function <T extends DependentDevice> (device: T): Clock<void, T> {
+	return bindDeep(clock as Omit<Clock<T>, "interval">, device);
+};

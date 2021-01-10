@@ -3,13 +3,12 @@
 	Description: Class for the Launchpad MK2 device
 */
 import rocketry, {Device, PortNumbers} from "@rocketry/core";
-import bindDeep from "bind-deep";
-import {color} from "./features/color";
-import {clock, Clock} from "./features/clock";
+import {Color, color} from "./features/color";
+import {Clock, makeClock} from "./features/clock";
 import {createButtons, registerButtonEvents} from "./features/button";
-import {layout} from "./features/layout";
+import {Layout, makeLayout} from "./features/layout";
 import {makeQuery, get} from "./features/query";
-import {marquee, registerMarqueeEvents} from "./features/marquee";
+import {makeMarquee, Marquee, registerMarqueeEvents} from "./features/marquee";
 
 
 /*
@@ -30,30 +29,30 @@ const sysexInformation = () => {
 /*
 	Launchpad MK2 Class
 */
-export default interface LaunchpadMk2 {
-	constructor: typeof LaunchpadMk2;
-}
-export default class LaunchpadMk2 extends Device {
-	static color = color;
-	clock = bindDeep(clock as Clock<LaunchpadMk2>, this);
+export default class LaunchpadMk2 extends Device<LaunchpadMk2, typeof LaunchpadMk2> {
+	static color: Color = color;
 	buttons = createButtons(this);
-	layout = bindDeep(layout, this);
+	// Features
 	query = makeQuery(this);
 	get = get.bind(this);
-	marquee = bindDeep(marquee, this)
+	clock: Clock<void, this> = makeClock<this>(this);
+	layout: Layout<void, this> = makeLayout<this>(this);
+	marquee: Marquee<void> = makeMarquee<this>(this);
 
 	constructor (ports?: PortNumbers) {
 		super(ports);
+		// Set layout to session for Rocketry control, assures the layout is the default
+		this.layout.set("session");
 	}
 
 	// Full reset
 	// The MK2 ignores all reset commands from the MIDI spec I tested and
 	// doesn't document their own in the reference so...
 	reset() {
-		this.clock.reset();
-		this.layout.reset();
-		this.marquee.reset();
-		// this.light.reset();
+		this.clock.reset()
+			.layout.reset()
+			// .light.reset()
+			.marquee.reset();
 		return this;
 	}
 
@@ -76,7 +75,7 @@ export default class LaunchpadMk2 extends Device {
 			"channel": 1
 		},
 		{
-			"regex": /Volume|^Fader$/i,
+			"regex": /Volume|Fader/i,
 			"channel": 1
 		},
 		{

@@ -1,7 +1,8 @@
 import {inRange} from "lodash";
 import LaunchpadMk2 from "..";
-import type {Message, Device, Send, DeviceAPIClass} from "@rocketry/core";
+import type {Message, Device, DeviceAPIClass, DeviceConstructor} from "@rocketry/core";
 import type {StandardColorType, Color} from "./color";
+import bindDeep from "bind-deep";
 
 
 // Text Scrolling across the pad
@@ -37,7 +38,7 @@ marquee.normalize = function(text: string | Message): Message {
 		for (const object of text) {
 			if (typeof object === "string") {
 				// Recursive with each string
-				result.push(this.marquee.normalize(object));
+				result.push(...this.marquee.normalize(object));
 			} else if (typeof object === "number") {
 				if (!inRange(object, 1, 8)) {
 					throw new RangeError("Text speed isn't in the valid range.");
@@ -58,13 +59,14 @@ marquee.normalize = function(text: string | Message): Message {
 	return result;
 };
 
-
-interface DependentDevice extends Device {
-	marquee: Marquee<void>;
-	send: Send<DependentDevice, void>;
-	constructor: typeof Device & DeviceAPIClass & {
+declare interface DependentDevice {
+	constructor: DeviceConstructor<DependentDevice> & {
 		color: Color;
 	};
+}
+declare abstract class DependentDevice extends Device<DependentDevice> {
+	marquee: Marquee<void>;
+	static color: Color;
 }
 
 export interface Marquee<T extends DependentDevice | void> {
@@ -110,4 +112,8 @@ export const registerMarqueeEvents = function () {
 			footer: sysExFooter,
 		},
 	);
+};
+
+export const makeMarquee = function <T extends DependentDevice> (device: T): Marquee<void> {
+	return bindDeep(marquee as Marquee<T>, device);
 };

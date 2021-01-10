@@ -1,5 +1,6 @@
 import {inRange} from "lodash";
 import type {Device, Send} from "@rocketry/core";
+import bindDeep from "bind-deep";
 
 // Change layouts
 const change: Layout<DependentDevice>["change"] = function(layout: LayoutType) {
@@ -18,7 +19,7 @@ const reset: Layout<DependentDevice>["reset"] = function() {
 };
 // Validate and normalize layouts
 const normalize: Layout<DependentDevice>["normalize"] = function(layout: LayoutType) {
-	let result: number;
+	let result: number = -1;
 	if (typeof layout === "number") {
 		result = layout
 	} else {
@@ -44,21 +45,25 @@ export const layout: Layout<DependentDevice> = {
 	set,
 	reset,
 	normalize,
+	current: undefined,
 };
 
-interface DependentDevice extends Device {
-	layout: Layout<DependentDevice, void>;
-	send: Send<DependentDevice, void>;
+declare abstract class DependentDevice extends Device<DependentDevice> {
+	layout: Layout<void, DependentDevice>;
 	layouts: Array<{
 		regex: RegExp,
 		channel: number;
 	}>
 }
 
-export interface Layout<R extends DependentDevice, T extends DependentDevice | void = R> {
+export interface Layout<T extends DependentDevice | void, R extends DependentDevice | void = T> {
 	normalize (this: T, layout: LayoutType): number;
 	change (this: T, layout: LayoutType): R;
 	set (this: T, layout: LayoutType): R;
 	reset (this: T): R;
 	current?: number;
 }
+
+export const makeLayout = function <T extends DependentDevice> (device: T): Layout<void, T> {
+	return bindDeep(layout as Layout<T>, device);
+};

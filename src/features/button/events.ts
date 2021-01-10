@@ -16,10 +16,10 @@ export const registerButtonEvents = function () {
 	const noCcStatus = {
 		min: 1,
 		max: 1,
-		validate(value) {
+		validate(value: any) {
 			return isNoteOn(value) || isControlChange(value);
 		},
-		mutate(message) {
+		mutate(message: any) {
 			if (isNoteOn(message.status)) {
 				message.status = "noteOn";
 			} else if (isControlChange(message.status)) {
@@ -33,14 +33,14 @@ export const registerButtonEvents = function () {
 		validate(value: number) {
 			return inRange(value, 0, 128);
 		},
-		mutate(message: any) {
+		mutate(this: LaunchpadMk2, message: any) {
 			message.note = message.note[0];
 
 			// Target
 			message.target = this.query({
 				status: message.status,
 				note: {
-					[this.layout.current]: message.note,
+					[this.layout.current ?? 0]: message.note,
 				},
 			});
 		},
