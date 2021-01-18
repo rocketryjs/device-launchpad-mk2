@@ -1,5 +1,5 @@
 import {betweenInclusive} from "@rocketry/core";
-import {normalize, convert} from "loose-rgb"
+import looseRGB from "loose-rgb";
 import {RGB, RGBArray} from "loose-rgb/lib/helpers";
 
 
@@ -31,7 +31,7 @@ export const names: Record<string, string | number> = {
 	"blue grey": "blue gray",
 	"white": 3,
 	"black": "off",
-	"off": 0
+	"off": 0,
 };
 
 // Ranges, exclusive on ceiling
@@ -40,36 +40,41 @@ export const ranges = {
 	rgb: [0, 64],
 } as const;
 
+// Validates and normalizes formats for RGB and standard colors
+function normalize (this: Color, color: RGB): RGBArray;
+function normalize (this: Color, color: StandardColor): StandardColor;
+function normalize (this: Color, color: string): StandardColor | RGBArray;
+function normalize (this: Color, color: string | StandardColor | RGB): RGBArray | StandardColor
+function normalize (this: Color, color: string | StandardColor | RGB): RGBArray | StandardColor {
+	const throwColorError = () => {
+		throw new RangeError(`Color: ${color.toString()}, isn't in the accepted range.`);
+	};
+		// Alias for named color
+	if (typeof color === "string") {
+		// From color names
+		return this.normalize(this.names[color]);
+	}
+	// Values
+	if (typeof color === "object") {
+		const result = looseRGB.convert.toArray(looseRGB.normalize(color));
+		result.every(value => betweenInclusive(value, ...this.ranges.rgb)) || throwColorError();
+		return result;
+	} else {
+		// Standard: user color name or defaults color name for the device or use number
+		betweenInclusive(color, ...this.ranges.basic) || throwColorError();
+		return color;
+	}
+}
+
 export const color: Color = {
 	names,
 	ranges,
-	// Validates and normalizes formats for RGB and standard colors
-	// TODO: type overload
-	normalize (color) {
-		const throwColorError = () => {
-			throw new RangeError(`Color: ${color}, isn't in the accepted range.`);
-		}
-		// Alias for named color
-		if (typeof color === "string") {
-			// From color names
-			return this.normalize(this.names[color]);
-		}
-		// Values
-		if (typeof color === "object") {
-			const result = convert.toArray(normalize(color));
-			result.every(value => betweenInclusive(value, ...this.ranges.rgb)) || throwColorError;
-			return result;
-		} else {
-			// Basic: user color name or defaults color name for the device or use number
-			betweenInclusive(color, ...this.ranges.basic) || throwColorError;
-			return color;
-		}
-	},
+	normalize,
 };
 
-export type StandardColorType = number;
+export type StandardColor = number;
 export interface Color {
 	names: typeof names;
 	ranges: typeof ranges;
-	normalize (this: Color, color: string | StandardColorType | RGB): StandardColorType | RGBArray;
-};
+	normalize: typeof normalize;
+}

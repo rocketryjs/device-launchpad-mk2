@@ -1,10 +1,6 @@
-/*
-	Module: Launchpad MIDI clock
-	Description: Methods for MIDI clock capable Launchpad devices
-*/
-
 import type {Device} from "@rocketry/core";
 import bindDeep from "bind-deep";
+
 
 const clear: Clock<DependentDevice>["clear"] = function () {
 	// Stop the interval
@@ -14,11 +10,11 @@ const clear: Clock<DependentDevice>["clear"] = function () {
 	}
 	return this;
 };
-const change: Clock<DependentDevice>["change"] = function(
+const change: Clock<DependentDevice>["change"] = function (
 	// Beats per minute
 	bpm: number,
 	// Will stop after 48 messages (2 beats) by default
-	maxReps: number = 48
+	maxReps = 48
 ) {
 	// Save
 	this.clock.current = bpm;
@@ -30,7 +26,7 @@ const change: Clock<DependentDevice>["change"] = function(
 	// `device.reset()` should be run before `device.close()` as this only prevents extra messages
 	if (!this.clock.hasCloseListener) {
 		this.clock.hasCloseListener = true;
-		this.on("close", this.clock.clear);
+		this.on("close", () => this.clock.clear());
 	}
 
 	let reps = 0;
@@ -76,13 +72,13 @@ declare abstract class DependentDevice extends Device<DependentDevice> {
 }
 
 export interface Clock<T extends DependentDevice | void, R extends DependentDevice | void = T> {
+	current?: number;
+	hasCloseListener: boolean;
+	interval?: NodeJS.Timeout;
 	clear (this: T): R;
 	change (this: T, bpm: number, maxReps?: number): R;
 	set (this: T, bpm: number, maxReps?: number): R;
 	reset (this: T): R;
-	current?: number;
-	hasCloseListener: boolean;
-	interval?: NodeJS.Timeout;
 }
 
 export const makeClock = function <T extends DependentDevice> (device: T): Clock<void, T> {

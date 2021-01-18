@@ -1,62 +1,53 @@
-import type {RGB} from "loose-rgb/lib/helpers";
-import type {StandardColorType} from "../color";
-import {LaunchpadMk2Button} from ".";
-
-// Helper function for sending standard colors
-export const sendStandard = function(this: LaunchpadMk2Button, color: number, channel?: number) {
-	const layout = this.device.layout.current || 0;
-	if (!channel) {
-		// Channel to use from layout
-		channel = this.device.layouts[layout].channel;
-	}
-	console.log(this);
-	return this.device.send[this.status]([this.note, color], channel);
-};
+import {Device, DeviceConstructor, Status, SubEmitter} from "@rocketry/core";
+import bindDeep from "bind-deep";
+import type {RGB, RGBArray} from "loose-rgb/lib/helpers";
+import type {Color, StandardColor} from "../color";
 
 
 // Lighting
-export const light = function (color: StandardColorType | RGB) {
+export const light: Light<DependentButton> = function (color) {
 	// Normalize
-	color = this.device.constructor.color.normalize(color);
-
-	// Save
-	this.light.current = color;
+	const normalizedColor = this.device.constructor.color.normalize(color);
 
 	// Send
-	if (Array.isArray(color)) {
-		// RGB
-		return this.device.send.sysex([this.device.constructor.sysex.prefix, 11, this.note.default, color]);
+	if (Array.isArray(normalizedColor)) {
+		// RGB color
+		this.device.send.sysex([...this.device.constructor.sysex.prefix, 11, this.note, ...normalizedColor]);
+	} else {
+		// Standard color
+		this.device.send[this.status]([this.note, normalizedColor]);
 	}
-	// Basic
-	return sendStandard.call(this, color);
+
+	// Save
+	this.light.current = normalizedColor;
+
+	return this;
 };
-light.stop = function() {
+
+export const dark = light.reset = function () {
 	return this.light("off");
 };
-light.reset = light.stop;
-export const dark = light.stop;
 
 
 // Flashing
-export const flash = function(color: StandardColorType) {
+export const flash: Flash<DependentButton> = function (color) {
 	// Normalize
-	color = this.device.constructor.color.normalize(color);
-
-	// Save
-	this.flash.current = color;
+	const normalizedColor = this.device.constructor.color.normalize(color);
 
 	// Send
-	if (Array.isArray(color)) {
-		// RGB
+	if (Array.isArray(normalizedColor)) {
+		// RGB color
 		throw new TypeError("Flashing can't be used with an RGB color via MIDI.");
 	}
-	// Basic
-	return sendStandard.call(this, color, 2);
+	// Standard color
+	this.device.send[this.status]([this.note, normalizedColor], 2);
 
-	// Method chaining
+	// Save
+	this.flash.current = normalizedColor;
+
 	return this;
 };
-flash.stop = function() {
+flash.reset = function () {
 	// Re-light or pulse color
 	if (this.pulse.current) {
 		this.pulse(this.pulse.current);
@@ -67,30 +58,80 @@ flash.stop = function() {
 		this.dark();
 	}
 
-	// Method chaining
 	return this;
 };
-flash.reset = flash.stop;
 
 
 // Pulsing
-export const pulse = function(color: StandardColorType) {
+export const pulse: Pulse<DependentButton> = function (color) {
 	// Normalize
-	color = this.device.constructor.color.normalize(color);
+	const normalizedColor = this.device.constructor.color.normalize(color);
 
-	// Save
-	this.pulse.current = color;
 	// Send
-	if (Array.isArray(color)) {
-		// RGB
+	if (Array.isArray(normalizedColor)) {
+		// RGB color
 		throw new TypeError("Pulsing can't be used with an RGB color.");
 	}
-	return sendStandard.call(this, color, 3);
+	// Standard color
+	this.device.send[this.status]([this.note, normalizedColor], 3);
 
-	// Method chaining
+	// Save
+	this.pulse.current = normalizedColor;
+
 	return this;
 };
-pulse.stop = function() {
+pulse.reset = function () {
 	return this.pulse("off");
 };
-pulse.reset = pulse.stop;
+
+declare interface DependentDevice {
+	constructor: DeviceConstructor<DependentDevice> & {
+		color: Color;
+	};
+}
+declare abstract class DependentDevice extends Device<DependentDevice> {}
+
+declare abstract class DependentButton extends SubEmitter<DependentDevice> {
+	status: Status;
+	note: number;
+	light: Light<void, DependentButton>;
+	dark: Light<void, DependentButton>["reset"];
+	flash: Flash<void, DependentButton>;
+	pulse: Pulse<void, DependentButton>;
+}
+
+export interface Light<T extends DependentButton | void, R extends DependentButton | void = T> {
+	current?: StandardColor | RGBArray;
+	(this: T, color: string | StandardColor | RGB): R;
+	reset (this: T): R;
+}
+
+export type Dark <T extends DependentButton | void, R extends DependentButton | void = T> = Light<T, R>["reset"]
+
+export interface Flash<T extends DependentButton | void, R extends DependentButton | void = T> {
+	current?: StandardColor;
+	(this: T, color: string | StandardColor): R;
+	reset (this: T): R;
+}
+
+export interface Pulse<T extends DependentButton | void, R extends DependentButton | void = T> {
+	current?: StandardColor;
+	(this: T, color: string | StandardColor): R;
+	reset (this: T): R;
+}
+
+export const makeLight = function <T extends DependentButton> (button: T): Light<void, T> {
+	return bindDeep(light as unknown as Light<T>, button);
+};
+
+export const makeDark = function <T extends DependentButton> (button: T): Dark<void, T> {
+	return bindDeep(dark as unknown as Dark<T>, button);
+};
+
+export const makeFlash = function <T extends DependentButton> (button: T): Flash<void, T> {
+	return bindDeep(flash as unknown as Flash<T>, button);
+};
+
+export const makePulse = function <T extends DependentButton> (button: T): Pulse<void, T> {
+	return bindDeep(pulse as unknown as Pulse<T>, button);
+};

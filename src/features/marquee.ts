@@ -1,26 +1,22 @@
+import type {Message, Device, DeviceConstructor} from "@rocketry/core";
+import bindDeep from "bind-deep";
 import {inRange} from "lodash";
 import LaunchpadMk2 from "..";
-import type {Message, Device, DeviceAPIClass, DeviceConstructor} from "@rocketry/core";
-import type {StandardColorType, Color} from "./color";
-import bindDeep from "bind-deep";
+import type {StandardColor, Color} from "./color";
 
 
 // Text Scrolling across the pad
-export const marquee: Marquee<DependentDevice> = function (text, color = "white", loop = 0) {
+export const marquee: Marquee<DependentDevice> = function (text, color = "white", loop = false) {
+	const loopByte = +!!loop;
 	const normalizedColor = this.constructor.color.normalize(color);
-	if (text) {
-		text = this.marquee.normalize(text);
-	} else {
-		text = [0];
-	}
-	loop = +loop; // true, 1 => 1; false, 0, "" => 0
+	const normalizedText: Message = text ? this.marquee.normalize(text) : [0];
 
 	if (Array.isArray(normalizedColor)) {
-		// RGB
+		// RGB color
 		throw new TypeError("Marquee can't be used with an RGB color via MIDI.");
 	}
-	// Basic
-	this.send.sysex([...this.constructor.sysex.prefix, 20, normalizedColor, loop, ...text]);
+	// Basic color
+	this.send.sysex([...this.constructor.sysex.prefix, 20, normalizedColor, loopByte, ...normalizedText]);
 
 	// Return promise to detect loop or stop (stopMarquee or finished)
 	// This will only resolve once but looping may cause the event to fire after a single "marquee" event
@@ -28,12 +24,11 @@ export const marquee: Marquee<DependentDevice> = function (text, color = "white"
 	return this.promiseOnce("marquee", 0);
 };
 // Stop the marquee
-marquee.stop = function() {
+marquee.reset = marquee.stop = function () {
 	return this.marquee();
 };
-marquee.reset = marquee.stop;
-marquee.normalize = function(text: string | Message): Message {
-	let result = [];
+marquee.normalize = function (text: string | Message): Message {
+	const result = [];
 	if (Array.isArray(text)) {
 		for (const object of text) {
 			if (typeof object === "string") {
@@ -46,7 +41,7 @@ marquee.normalize = function(text: string | Message): Message {
 				// Add plain speed byte, recursive with each string in object
 				result.push(object);
 			} else {
-				throw new TypeError(`Text: ${object}, wasn't a number (for speed changes) or a string.`);
+				throw new TypeError("Text wasn't a number (for speed changes) or a string.");
 			}
 		}
 	} else {
@@ -65,51 +60,40 @@ declare interface DependentDevice {
 	};
 }
 declare abstract class DependentDevice extends Device<DependentDevice> {
-	marquee: Marquee<void>;
 	static color: Color;
+	marquee: Marquee<void>;
 }
 
 export interface Marquee<T extends DependentDevice | void> {
-	(this: T, text?: string | Message, color?: string | StandardColorType, loop?: boolean | number): Promise<any>;
-	stop (this: T): Promise<any>;
-	reset (this: T): Promise<any>;
+	(this: T, text?: string | Message, color?: string | StandardColor, loop?: boolean): Promise<Message>;
+	stop (this: T): Promise<Message>;
+	reset (this: T): Promise<Message>;
 	normalize (this: T, text: string | Message): Message;
 }
 
 
-export const registerMarqueeEvents = function () {
-	// Events
-	// Shared bytes
-	const sysExStatus = {
-		matches: [240],
-		mutate(message: any) {
-			message.status = message.status[0];
-		},
-	};
-	const sysExFooter = {
-		matches: [247],
-		mutate(message: any) {
-			message.footer = message.footer[0];
-		},
-	};
-	const manufacturerId = {
-		matches: LaunchpadMk2.sysex.manufacturer,
-	};
-	const modelId = {
-		matches: LaunchpadMk2.sysex.model,
-	};
-
+export const registerMarqueeEvents = function (): void {
 	// When marquee stops or loops
 	LaunchpadMk2.registerEvent(
 		"marquee",
 		{
-			status: sysExStatus,
-			manufacturerId: manufacturerId,
-			modelId: modelId,
-			methodResponse: {
-				matches: [21],
+			pattern: {
+				status: {
+					matchBytes: [240],
+				},
+				manufacturerId: {
+					matchBytes: LaunchpadMk2.sysex.manufacturer,
+				},
+				modelId: {
+					matchBytes: LaunchpadMk2.sysex.model,
+				},
+				methodResponse: {
+					matchBytes: [21],
+				},
+				footer: {
+					matchBytes: [247],
+				},
 			},
-			footer: sysExFooter,
 		},
 	);
 };

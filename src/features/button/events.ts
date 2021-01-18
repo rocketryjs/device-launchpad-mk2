@@ -1,67 +1,54 @@
+import {Captures, Message} from "@rocketry/core";
 import {inRange} from "lodash";
 import LaunchpadMk2 from "../..";
 
 
-export const registerButtonEvents = function () {
-	// Events
-	// Shared functions
-	const isNoteOn = function(value: number) {
-		return inRange(value, 144, 160);
-	};
-	const isControlChange = function(value: number) {
-		return inRange(value, 176, 192);
-	};
+const isNoteOn = (value: number) => inRange(value, 144, 160);
+const isControlChange = (value: number) => inRange(value, 176, 192);
+const validateStatus = (message: Message, captures: Captures) => isNoteOn(captures.status[0]) || isControlChange(captures.status[0]);
+const validateNote = (message: Message, captures: Captures) => inRange(captures.note[0], 0, 128);
 
-	// Shared bytes
-	const noCcStatus = {
-		min: 1,
-		max: 1,
-		validate(value: any) {
-			return isNoteOn(value) || isControlChange(value);
-		},
-		mutate(message: any) {
-			if (isNoteOn(message.status)) {
-				message.status = "noteOn";
-			} else if (isControlChange(message.status)) {
-				message.status = "controlChange";
-			}
-		}
+const getMetaDataNote = function (this: LaunchpadMk2, message: Message, captures: Captures) {
+	let status: string;
+	if (isNoteOn(captures.status[0])) {
+		status = "noteOn";
+	} else if (isControlChange(captures.status[0])) {
+		status = "controlChange";
+	}
+	return {
+		note: captures.note,
+		target: this.buttons.find(
+			(button) => button.status === status && button.note === captures.note[0]
+		),
 	};
-	const note = {
-		min: 1,
-		max: 1,
-		validate(value: number) {
-			return inRange(value, 0, 128);
-		},
-		mutate(this: LaunchpadMk2, message: any) {
-			message.note = message.note[0];
+};
 
-			// Target
-			message.target = this.query({
-				status: message.status,
-				note: {
-					[this.layout.current ?? 0]: message.note,
-				},
-			});
-		},
+export const registerButtonEvents = function (): void {
+	const singleByte = {
+		minBytes: 1,
+		maxBytes: 1,
 	};
 
 	// When pressing a button
 	LaunchpadMk2.registerEvent(
 		"press",
 		{
-			status: noCcStatus,
-			note,
-			pressure: {
-				min: 1,
-				max: 1,
-				validate(value) {
-					return inRange(value, 1, 128);
-				},
-				mutate(message) {
-					message.pressed = true;
-					message.pressure = message.pressure[0];
-				},
+			pattern: {
+				status: singleByte,
+				note: singleByte,
+				pressure: singleByte,
+			},
+			validate (message, captures) {
+				return validateStatus(message, captures)
+					&& validateNote(message, captures)
+					&& inRange(captures.pressure[0], 1, 128);
+			},
+			getMetaData (this: LaunchpadMk2, message, captures) {
+				return {
+					...getMetaDataNote.call(this, message, captures),
+					pressed: true,
+					pressure: captures.pressure[0],
+				};
 			},
 		},
 	);
@@ -70,14 +57,23 @@ export const registerButtonEvents = function () {
 	LaunchpadMk2.registerEvent(
 		"release",
 		{
-			status: noCcStatus,
-			note,
-			pressure: {
-				matches: [0],
-				mutate(message) {
-					message.pressed = false;
-					message.pressure = 0;
+			pattern: {
+				status: singleByte,
+				note: singleByte,
+				pressure: {
+					matchBytes: [0],
 				},
+			},
+			validate (message, captures) {
+				return validateStatus(message, captures)
+					&& validateNote(message, captures);
+			},
+			getMetaData (this: LaunchpadMk2, message, captures) {
+				return {
+					...getMetaDataNote.call(this, message, captures),
+					pressed: false,
+					pressure: 0,
+				};
 			},
 		},
 	);

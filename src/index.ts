@@ -1,13 +1,7 @@
-/*
-	Module: Launchpad MK2
-	Description: Class for the Launchpad MK2 device
-*/
 import rocketry, {Device, PortNumbers} from "@rocketry/core";
-import {Color, color} from "./features/color";
+import {makeButtons, ButtonList, registerButtonEvents} from "./features/button";
 import {Clock, makeClock} from "./features/clock";
-import {createButtons, registerButtonEvents} from "./features/button";
-import {Layout, makeLayout} from "./features/layout";
-import {makeQuery, get} from "./features/query";
+import {Color, color} from "./features/color";
 import {makeMarquee, Marquee, registerMarqueeEvents} from "./features/marquee";
 
 
@@ -31,61 +25,32 @@ const sysexInformation = () => {
 */
 export default class LaunchpadMk2 extends Device<LaunchpadMk2, typeof LaunchpadMk2> {
 	static color: Color = color;
-	buttons = createButtons(this);
+	// SysEx information
+	static sysex = sysexInformation();
+	// eslint-disable-next-line prefer-named-capture-group
+	static regex = /^(launchpad mk2)(?:\s+\d+)?$/i;
 	// Features
-	query = makeQuery(this);
-	get = get.bind(this);
+	buttons: ButtonList = makeButtons(this);
 	clock: Clock<void, this> = makeClock<this>(this);
-	layout: Layout<void, this> = makeLayout<this>(this);
 	marquee: Marquee<void> = makeMarquee<this>(this);
 
 	constructor (ports?: PortNumbers) {
 		super(ports);
 		// Set layout to session for Rocketry control, assures the layout is the default
-		this.layout.set("session");
+		this.send.sysEx([...this.constructor.sysex.prefix, 34, 0]);
 	}
 
 	// Full reset
 	// The MK2 ignores all reset commands from the MIDI spec I tested and
 	// doesn't document their own in the reference so...
-	reset() {
-		this.clock.reset()
-			.layout.reset()
-			// .light.reset()
-			.marquee.reset();
+	reset (): this {
+		void(
+			this.clock.reset()
+				// .light.reset()
+				.marquee.reset()
+		);
 		return this;
 	}
-
-	// Layouts regex and channels (to allow config of user 1 and 2)
-	layouts = [
-		{
-			"regex": /Session|Default/i,
-			"channel": 1
-		},
-		{
-			"regex": /User 1|Drum|Rack/i,
-			"channel": 6
-		},
-		{
-			"regex": /User 2/i,
-			"channel": 14
-		},
-		{
-			"regex": /Reserved|Ableton|Live/i,
-			"channel": 1
-		},
-		{
-			"regex": /Volume|Fader/i,
-			"channel": 1
-		},
-		{
-			"regex": /Pan/i,
-			"channel": 1
-		},
-	]
-	// SysEx information
-	static sysex = sysexInformation();
-	static regex = /^(Launchpad MK2)(?:\s+\d+)?$/i
 }
 
 registerButtonEvents();
